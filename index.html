@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GASHAPON VOKAL – TAMAN TEMA VOKAL</title>
+    <!-- Tailwind CSS for utility layout & responsive sizing -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for friendly, cartoonish typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Fredoka', 'Nunito', sans-serif;
+        }
+
+        body {
+            background-color: #0b132b;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* Machine shake animation */
+        @keyframes machineShake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-6px, 3px) rotate(-1.5deg); }
+            40% { transform: translate(6px, -3px) rotate(1.5deg); }
+            60% { transform: translate(-4px, -2px) rotate(-1deg); }
+            80% { transform: translate(4px, 2px) rotate(1deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .shake-active {
+            animation: machineShake 0.6s ease-in-out infinite;
+        }
+
+        /* Crank handle turn */
+        @keyframes crankTurn {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .crank-active {
+            animation: crankTurn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Zoom-in Modal Pop animation for center screen capsule display */
+        @keyframes capsuleZoomIn {
+            0% { transform: scale(0.1) translateY(200px) rotate(-180deg); opacity: 0; }
+            70% { transform: scale(1.15) translateY(-10px) rotate(10deg); opacity: 1; }
+            85% { transform: scale(0.95) translateY(5px) rotate(-5deg); }
+            100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; }
+        }
+
+        .capsule-center-zoom {
+            animation: capsuleZoomIn 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Golden shimmer pulse */
+        @keyframes goldShimmer {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.9)) scale(1); }
+            50% { filter: drop-shadow(0 0 40px rgba(255, 235, 59, 1)) scale(1.06); }
+        }
+
+        .gold-shimmer-active {
+            animation: goldShimmer 1.8s infinite ease-in-out;
+        }
+
+        /* Sparkle background dots pattern */
+        .sparkle-pattern {
+            background-image: radial-gradient(circle, #fde047 15%, transparent 16%), radial-gradient(circle, #fde047 15%, transparent 16%);
+            background-size: 50px 50px;
+            background-position: 0 0, 25px 25px;
+            opacity: 0.15;
+        }
+
+        /* 3D Tactile Buttons */
+        .btn-3d-green {
+            background: linear-gradient(180deg, #4ADE80 0%, #16A34A 100%);
+            box-shadow: 0 8px 0 #15803D, 0 12px 20px rgba(0,0,0,0.4);
+        }
+        .btn-3d-green:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #15803D, 0 6px 10px rgba(0,0,0,0.4);
+        }
+
+        .btn-3d-yellow {
+            background: linear-gradient(180deg, #FACC15 0%, #CA8A04 100%);
+            box-shadow: 0 8px 0 #A16207, 0 12px 20px rgba(0,0,0,0.4);
+        }
+        .btn-3d-yellow:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #A16207, 0 6px 10px rgba(0,0,0,0.4);
+        }
+
+        .btn-3d-purple {
+            background: linear-gradient(180deg, #C084FC 0%, #9333EA 100%);
+            box-shadow: 0 8px 0 #7E22CE, 0 12px 20px rgba(0,0,0,0.4);
+        }
+        .btn-3d-purple:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #7E22CE, 0 6px 10px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen relative select-none flex flex-col justify-between items-center overflow-hidden">
+
+    <!-- Carnival Canvas Background -->
+    <canvas id="carnivalCanvas" class="absolute inset-0 z-0 w-full h-full"></canvas>
+
+    <!-- Top Navigation Header -->
+    <header class="relative z-10 w-full max-w-6xl px-4 pt-3 flex justify-between items-center">
+        <!-- Title Badge -->
+        <div class="bg-gradient-to-r from-red-600 via-pink-600 to-amber-500 border-4 border-white rounded-3xl px-5 py-2 shadow-2xl flex items-center gap-3">
+            <i class="fa-solid fa-ferris-wheel text-yellow-300 text-3xl animate-spin" style="animation-duration: 12s;"></i>
+            <div>
+                <h1 class="text-xl md:text-3xl font-black text-white tracking-wider drop-shadow-md leading-none">
+                    GASHAPON VOKAL
+                </h1>
+                <p class="text-xs md:text-sm font-bold text-yellow-200 tracking-widest uppercase">Taman Tema Vokal PPKI</p>
+            </div>
+        </div>
+
+        <!-- Audio & Screen Controls -->
+        <div class="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md p-2 rounded-2xl border-2 border-slate-700 shadow-xl">
+            <button id="btnAudioToggle" title="Mute/Unmute" class="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border-2 border-yellow-400 text-yellow-400 flex items-center justify-center text-xl transition-all">
+                <i class="fa-solid fa-volume-xmark" id="audioIcon"></i>
+            </button>
+            <div class="hidden sm:flex flex-col px-2">
+                <span class="text-[10px] text-yellow-300 font-bold mb-0.5">BUNYI</span>
+                <input id="volumeSlider" type="range" min="0" max="1" step="0.05" value="0.3" class="w-16 accent-yellow-400 cursor-pointer h-2 bg-slate-700 rounded-lg">
+            </div>
+            <button id="btnFullscreen" title="Skrin Penuh" class="w-12 h-12 rounded-xl bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400 text-cyan-400 flex items-center justify-center text-xl transition-all">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Container -->
+    <main class="relative z-10 w-full max-w-5xl flex-1 flex flex-col items-center justify-center p-2">
+
+        <!-- Progress Counter -->
+        <div id="progressContainer" class="mb-3 bg-gradient-to-r from-amber-400 to-yellow-300 border-4 border-amber-600 rounded-full px-6 py-1.5 shadow-xl flex items-center gap-3">
+            <i class="fa-solid fa-star text-amber-800 text-xl animate-bounce"></i>
+            <span id="progressText" class="text-amber-950 text-lg md:text-xl font-black tracking-wide">
+                KAPSUL DIBUKA: 0 / 10
+            </span>
+        </div>
+
+        <!-- GASHAPON MACHINE STRUCTURE -->
+        <div id="gashaponMachine" class="relative w-72 sm:w-80 md:w-96 flex flex-col items-center">
+            
+            <!-- Glass Dome Container -->
+            <div class="relative w-full h-64 sm:h-72 md:h-80 rounded-t-full bg-gradient-to-b from-cyan-200/30 via-white/20 to-cyan-400/40 border-8 border-red-500 shadow-2xl backdrop-blur-sm overflow-hidden flex items-end justify-center">
+                <!-- Shiny Glass Highlights -->
+                <div class="absolute top-4 left-6 w-12 h-32 bg-white/30 rounded-full rotate-45 blur-xs pointer-events-none"></div>
+                <div class="absolute top-8 right-8 w-6 h-16 bg-white/25 rounded-full rotate-45 blur-xs pointer-events-none"></div>
+
+                <!-- Internal Canvas for Moving Interior Capsules -->
+                <canvas id="capsuleCanvas" class="w-full h-full absolute inset-0"></canvas>
+            </div>
+
+            <!-- Base / Body of Machine -->
+            <div id="machineBase" class="relative w-full bg-gradient-to-b from-red-600 via-red-500 to-red-700 border-x-8 border-b-8 border-red-800 rounded-b-3xl p-4 shadow-2xl flex flex-col items-center">
+                
+                <!-- Carnival Light Bulbs Strip -->
+                <div class="w-full flex justify-around py-1.5 bg-red-950/70 rounded-xl mb-3 border border-red-400/40 shadow-inner">
+                    <div class="w-4 h-4 rounded-full bg-yellow-300 shadow-[0_0_10px_#fde047]"></div>
+                    <div class="w-4 h-4 rounded-full bg-cyan-300 shadow-[0_0_10px_#67e8f9]"></div>
+                    <div class="w-4 h-4 rounded-full bg-pink-400 shadow-[0_0_10px_#f472b6]"></div>
+                    <div class="w-4 h-4 rounded-full bg-green-400 shadow-[0_0_10px_#4ade80]"></div>
+                    <div class="w-4 h-4 rounded-full bg-amber-400 shadow-[0_0_10px_#fbbf24]"></div>
+                </div>
+
+                <!-- Crank Handle & Coin Slot Panel -->
+                <div class="w-full bg-amber-400 border-4 border-amber-600 rounded-2xl p-3 flex justify-between items-center shadow-inner relative">
+                    <!-- Coin Slot Decorative -->
+                    <div class="flex flex-col items-center bg-amber-700 p-2 rounded-xl border-2 border-amber-900 shadow">
+                        <div class="w-2.5 h-8 bg-slate-950 rounded-full border border-yellow-300"></div>
+                        <span class="text-[9px] font-black text-amber-200 mt-1">SYILING</span>
+                    </div>
+
+                    <!-- Yellow Turning Handle -->
+                    <div id="crankArea" class="relative w-24 h-24 flex items-center justify-center cursor-pointer group">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-slate-100 to-slate-400 border-4 border-slate-600 shadow-lg flex items-center justify-center">
+                            <div id="crankHandle" class="w-20 h-6 bg-yellow-400 border-2 border-amber-700 rounded-full flex items-center justify-end px-1 shadow-md transition-transform">
+                                <div class="w-5 h-5 rounded-full bg-red-600 border border-white shadow"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dispenser Exit Area -->
+                <div class="w-full mt-3 bg-red-950/90 rounded-2xl border-4 border-red-900 h-20 relative flex items-center justify-center overflow-hidden shadow-inner">
+                    <span class="text-xs font-bold text-red-300/60 uppercase tracking-widest">KAPSUL KELUAR DI SINI</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Giant Spin Button -->
+        <div class="mt-4 flex flex-col items-center">
+            <button id="btnTurn" class="btn-3d-yellow text-amber-950 font-black text-2xl md:text-3xl px-12 py-5 rounded-3xl tracking-wider uppercase flex items-center gap-4 transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-rotate-right text-3xl md:text-4xl"></i>
+                PUTAR MESIN!
+            </button>
+        </div>
+
+    </main>
+
+    <!-- OVERLAY 1: START SCREEN -->
+    <div id="startOverlay" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-4">
+        <div class="bg-gradient-to-b from-amber-300 via-orange-400 to-red-500 border-8 border-white p-6 sm:p-10 rounded-3xl max-w-xl w-full text-center shadow-2xl relative overflow-hidden">
+            <i class="fa-solid fa-shapes text-6xl text-yellow-200 mb-3 animate-bounce"></i>
+            <h1 class="text-4xl sm:text-5xl font-black text-white drop-shadow-[0_4px_0_#991b1b] mb-1">
+                GASHAPON VOKAL
+            </h1>
+            <p class="text-xl sm:text-2xl font-black text-yellow-100 mb-6 drop-shadow">
+                TAMAN TEMA VOKAL
+            </p>
+            
+            <div class="bg-white/90 rounded-2xl p-4 mb-6 text-slate-800 text-left border-2 border-orange-300 shadow-inner">
+                <h3 class="font-black text-lg text-red-600 mb-1"><i class="fa-solid fa-star mr-1"></i> Panduan Ringkas:</h3>
+                <ul class="text-sm font-bold space-y-1 text-slate-700">
+                    <li>1. Tekan <strong>PUTAR MESIN!</strong> untuk memutarkan gashapon.</li>
+                    <li>2. Kapsul akan <strong>terus muncul di tengah skrin</strong> dalam saiz besar.</li>
+                    <li>3. Tekan butang <strong>BUKA KAPSUL!</strong> dan bunyikan vokal bersama murid!</li>
+                </ul>
+            </div>
+
+            <button id="btnStartGame" class="w-full btn-3d-green text-white font-black text-3xl py-5 rounded-2xl tracking-wider uppercase flex items-center justify-center gap-3 transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-play text-4xl"></i>
+                MULA MAIN
+            </button>
+        </div>
+    </div>
+
+    <!-- OVERLAY 2: CENTER SCREEN ZOOMED-IN CAPSULE MODAL -->
+    <div id="centerCapsuleModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-4">
+        <div class="absolute inset-0 sparkle-pattern pointer-events-none"></div>
+        
+        <div class="relative bg-gradient-to-b from-purple-800/90 via-indigo-900/90 to-slate-950/90 border-8 border-amber-400 rounded-3xl p-6 md:p-10 max-w-md w-full flex flex-col items-center text-center shadow-2xl">
+            <!-- Header Badge -->
+            <div class="bg-amber-400 text-amber-950 font-black text-xl md:text-2xl px-6 py-2 rounded-full uppercase tracking-wider mb-4 shadow-lg border-2 border-amber-600">
+                🎉 KAPSUL BARU! 🎉
+            </div>
+
+            <!-- ULTRA LARGE CENTER ZOOMED CAPSULE GRAPHIC -->
+            <div class="my-4 cursor-pointer" id="modalCapsuleGraphic">
+                <div id="zoomedCapsuleVisual" class="w-48 h-48 md:w-64 md:h-64 rounded-full border-8 border-white shadow-[0_0_40px_rgba(255,255,255,0.4)] flex flex-col overflow-hidden capsule-center-zoom">
+                    <!-- Top Half -->
+                    <div id="capsuleTopHalf" class="w-full h-1/2 bg-red-500 border-b-4 border-slate-800 relative flex items-center justify-center">
+                        <div class="w-16 h-8 bg-white/30 rounded-full blur-xs absolute top-4 left-6"></div>
+                    </div>
+                    <!-- Bottom Half -->
+                    <div id="capsuleBottomHalf" class="w-full h-1/2 bg-white relative flex items-center justify-center">
+                        <i class="fa-solid fa-star text-4xl text-amber-400 animate-spin" style="animation-duration: 8s;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GIANT HIGH-CONTRAST OPEN BUTTON -->
+            <button id="btnOpenCapsuleModal" class="mt-4 w-full btn-3d-purple text-white font-black text-3xl md:text-4xl py-5 rounded-2xl tracking-wider uppercase flex items-center justify-center gap-4 transition-transform hover:scale-105 active:scale-95 animate-bounce cursor-pointer">
+                <i class="fa-solid fa-box-open text-4xl"></i>
+                BUKA KAPSUL!
+            </button>
+        </div>
+    </div>
+
+    <!-- OVERLAY 3: VOWEL REVEAL MODAL -->
+    <div id="revealModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex flex-col items-center justify-center p-4">
+        <div class="bg-gradient-to-b from-indigo-600 via-purple-600 to-pink-600 border-8 border-white rounded-3xl p-6 md:p-8 max-w-2xl w-full text-center shadow-2xl relative flex flex-col items-center">
+            
+            <span id="revealGuideBadge" class="bg-yellow-400 border-4 border-amber-600 text-amber-950 font-black text-xl md:text-2xl px-8 py-2 rounded-full uppercase tracking-wider mb-4 shadow-lg">
+                JOM BUNYIKAN HURUF!
+            </span>
+
+            <!-- Split Capsule Visual -->
+            <div class="relative w-48 h-20 mb-2 flex justify-center items-center">
+                <div id="capsuleSplitLeft" class="w-16 h-16 rounded-l-full border-4 border-white shadow-xl flex items-center justify-center"></div>
+                <div id="capsuleSplitRight" class="w-16 h-16 rounded-r-full border-4 border-white shadow-xl flex items-center justify-center"></div>
+            </div>
+
+            <!-- ULTRA LARGE VOWEL CARD DISPLAY -->
+            <div id="vowelCard" class="w-full bg-white rounded-3xl p-6 my-2 border-4 border-yellow-300 shadow-2xl flex flex-col items-center justify-center">
+                <span id="vowelLetter" class="text-8xl sm:text-9xl md:text-[11rem] font-black leading-none drop-shadow-md select-none">
+                    a
+                </span>
+                <span id="vowelPhonetic" class="text-2xl sm:text-3xl font-black text-slate-700 mt-2 bg-slate-100 px-6 py-2 rounded-2xl border-2 border-slate-300">
+                    "a" seperti Ayam
+                </span>
+            </div>
+
+            <!-- SETERUSNYA Button for Teacher Pacing -->
+            <button id="btnNext" class="mt-6 btn-3d-green text-white font-black text-2xl md:text-3xl px-12 py-4 rounded-2xl tracking-wider uppercase flex items-center gap-3 cursor-pointer">
+                SETERUSNYA
+                <i class="fa-solid fa-arrow-right text-3xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- OVERLAY 4: PHASE 2 GOLDEN CAPSULE INTRO -->
+    <div id="goldenPhaseOverlay" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex flex-col items-center justify-center p-4">
+        <div class="text-center max-w-3xl w-full flex flex-col items-center">
+            <h2 class="text-3xl sm:text-5xl font-black text-yellow-300 mb-2 drop-shadow-[0_4px_0_#b45309] animate-bounce">
+                TAHNIAH! MASA UNTUK KAPSUL EMAS!
+            </h2>
+            <p class="text-white font-bold text-lg sm:text-xl mb-8 bg-slate-800/80 px-6 py-2 rounded-full border border-amber-400">
+                Pilih satu kapsul emas misteri di bawah:
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16 mb-8">
+                <!-- Golden Capsule 1 -->
+                <div id="goldCap1" class="gold-shimmer-active cursor-pointer flex flex-col items-center group">
+                    <div class="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-b from-yellow-200 via-amber-400 to-yellow-600 border-4 border-white shadow-[0_0_30px_rgba(251,191,36,0.8)] flex items-center justify-center transition-transform group-hover:scale-110">
+                        <i class="fa-solid fa-crown text-5xl sm:text-6xl text-amber-950"></i>
+                    </div>
+                    <span class="mt-3 bg-yellow-400 text-amber-950 font-black text-lg px-6 py-1.5 rounded-full border-2 border-amber-700 shadow">KAPSUL 1</span>
+                </div>
+
+                <!-- Golden Capsule 2 -->
+                <div id="goldCap2" class="gold-shimmer-active cursor-pointer flex flex-col items-center group">
+                    <div class="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-b from-yellow-200 via-amber-400 to-yellow-600 border-4 border-white shadow-[0_0_30px_rgba(251,191,36,0.8)] flex items-center justify-center transition-transform group-hover:scale-110">
+                        <i class="fa-solid fa-gem text-5xl sm:text-6xl text-amber-950"></i>
+                    </div>
+                    <span class="mt-3 bg-yellow-400 text-amber-950 font-black text-lg px-6 py-1.5 rounded-full border-2 border-amber-700 shadow">KAPSUL 2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY 5: VICTORY CELEBRATION -->
+    <div id="victoryOverlay" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-4">
+        <!-- Confetti Canvas -->
+        <canvas id="victoryCanvas" class="absolute inset-0 z-0 w-full h-full pointer-events-none"></canvas>
+
+        <div class="relative z-10 bg-gradient-to-b from-yellow-400 via-orange-500 to-red-600 border-8 border-white p-8 md:p-12 rounded-3xl max-w-2xl w-full text-center shadow-2xl flex flex-col items-center">
+            <i class="fa-solid fa-trophy text-7xl md:text-8xl text-yellow-200 mb-4 animate-bounce"></i>
+            <h1 class="text-4xl md:text-6xl font-black text-white drop-shadow-[0_5px_0_#7f1d1d] mb-2">
+                TAHNIAH!
+            </h1>
+            <h2 class="text-2xl md:text-4xl font-black text-yellow-200 mb-6 drop-shadow">
+                ANDA JUARA VOKAL!
+            </h2>
+            <p class="text-white text-lg font-bold mb-8 bg-red-900/40 p-4 rounded-2xl border border-yellow-300">
+                Syabas kepada semua murid PPKI! Anda telah berjaya mengenal dan membunyikan semua huruf vokal dengan cemerlang! 🎉
+            </p>
+
+            <button id="btnRestart" class="btn-3d-green text-white font-black text-3xl px-12 py-5 rounded-2xl tracking-wider uppercase flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+                <i class="fa-solid fa-rotate-right text-4xl"></i>
+                MAIN SEMULA
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. WEB AUDIO API SYNTHESIZER
+           ========================================================================== */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.isMuted = true;
+                this.volume = 0.3;
+                this.bgmTimer = null;
+                this.bgmNoteIndex = 0;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, type, duration, delay = 0, gainVal = 0.2) {
+                if (this.isMuted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+
+                    gain.gain.setValueAtTime(gainVal * this.volume, this.ctx.currentTime + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + delay + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(this.ctx.currentTime + delay);
+                    osc.stop(this.ctx.currentTime + delay + duration);
+                } catch(e) {}
+            }
+
+            playCrankSound() {
+                if (this.isMuted || !this.ctx) return;
+                for (let i = 0; i < 8; i++) {
+                    this.playTone(120 + Math.random() * 80, 'sawtooth', 0.08, i * 0.08, 0.3);
+                }
+            }
+
+            playDropSound() {
+                if (this.isMuted || !this.ctx) return;
+                this.playTone(300, 'sine', 0.1, 0, 0.4);
+                this.playTone(150, 'sine', 0.2, 0.05, 0.5);
+            }
+
+            playOpenSound() {
+                if (this.isMuted || !this.ctx) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'triangle', 0.3, idx * 0.06, 0.3);
+                });
+            }
+
+            playRevealSound() {
+                if (this.isMuted || !this.ctx) return;
+                this.playTone(523.25, 'sine', 0.4, 0, 0.3);
+                this.playTone(659.25, 'sine', 0.4, 0.08, 0.3);
+                this.playTone(783.99, 'sine', 0.5, 0.16, 0.4);
+            }
+
+            playGoldSound() {
+                if (this.isMuted || !this.ctx) return;
+                const baseFreq = 800;
+                for (let i = 0; i < 10; i++) {
+                    this.playTone(baseFreq + (i * 120), 'sine', 0.2, i * 0.05, 0.25);
+                }
+            }
+
+            playVictoryFanfare() {
+                if (this.isMuted || !this.ctx) return;
+                const notes = [
+                    {f: 523.25, d: 0.2, t: 0},
+                    {f: 523.25, d: 0.2, t: 0.2},
+                    {f: 523.25, d: 0.2, t: 0.4},
+                    {f: 659.25, d: 0.6, t: 0.6},
+                    {f: 783.99, d: 0.2, t: 1.2},
+                    {f: 1046.50, d: 0.8, t: 1.4}
+                ];
+                notes.forEach(n => {
+                    this.playTone(n.f, 'triangle', n.d, n.t, 0.4);
+                });
+            }
+
+            startBGM() {
+                if (this.bgmTimer) return;
+                const melody = [
+                    261.63, 329.63, 392.00, 329.63, 261.63, 329.63, 392.00, 523.25,
+                    349.23, 440.00, 523.25, 440.00, 293.66, 349.23, 392.00, 440.00
+                ];
+                
+                this.bgmTimer = setInterval(() => {
+                    if (!this.isMuted && this.ctx) {
+                        const note = melody[this.bgmNoteIndex % melody.length];
+                        this.playTone(note, 'sine', 0.18, 0, 0.15);
+                        if (this.bgmNoteIndex % 2 === 0) {
+                            this.playTone(note / 2, 'triangle', 0.2, 0, 0.2);
+                        }
+                        this.bgmNoteIndex++;
+                    }
+                }, 260);
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        /* ==========================================================================
+           2. ANIMATED CARNIVAL BACKGROUND CANVAS
+           ========================================================================== */
+        const bgCanvas = document.getElementById('carnivalCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+
+        function resizeCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let ferrisAngle = 0;
+        let coasterX = -100;
+
+        function drawCarnivalBackground() {
+            const w = bgCanvas.width;
+            const h = bgCanvas.height;
+
+            bgCtx.clearRect(0, 0, w, h);
+
+            // Sky
+            const skyGrad = bgCtx.createLinearGradient(0, 0, 0, h);
+            skyGrad.addColorStop(0, '#0f172a');
+            skyGrad.addColorStop(0.6, '#1e1b4b');
+            skyGrad.addColorStop(1, '#311042');
+            bgCtx.fillStyle = skyGrad;
+            bgCtx.fillRect(0, 0, w, h);
+
+            // Stars
+            bgCtx.fillStyle = '#ffffff';
+            for (let i = 0; i < 40; i++) {
+                const sx = (Math.sin(i * 99) * 0.5 + 0.5) * w;
+                const sy = (Math.cos(i * 33) * 0.5 + 0.5) * (h * 0.5);
+                const size = (Math.sin(Date.now() * 0.003 + i) * 0.5 + 0.5) * 2.5 + 1;
+                bgCtx.beginPath();
+                bgCtx.arc(sx, sy, size, 0, Math.PI * 2);
+                bgCtx.fill();
+            }
+
+            // Hills
+            bgCtx.fillStyle = '#1e293b';
+            bgCtx.beginPath();
+            bgCtx.ellipse(w * 0.2, h, w * 0.4, h * 0.3, 0, 0, Math.PI * 2);
+            bgCtx.ellipse(w * 0.8, h, w * 0.5, h * 0.35, 0, 0, Math.PI * 2);
+            bgCtx.fill();
+
+            // Ferris Wheel
+            const fwX = w * 0.15;
+            const fwY = h * 0.65;
+            const fwRadius = Math.min(w, h) * 0.18;
+
+            bgCtx.strokeStyle = '#f59e0b';
+            bgCtx.lineWidth = 5;
+            bgCtx.beginPath();
+            bgCtx.moveTo(fwX, fwY);
+            bgCtx.lineTo(fwX - fwRadius * 0.8, h);
+            bgCtx.moveTo(fwX, fwY);
+            bgCtx.lineTo(fwX + fwRadius * 0.8, h);
+            bgCtx.stroke();
+
+            bgCtx.strokeStyle = '#ef4444';
+            bgCtx.lineWidth = 4;
+            bgCtx.beginPath();
+            bgCtx.arc(fwX, fwY, fwRadius, 0, Math.PI * 2);
+            bgCtx.stroke();
+
+            ferrisAngle += 0.005;
+            const spokes = 8;
+            for (let i = 0; i < spokes; i++) {
+                const angle = ferrisAngle + (i * (Math.PI * 2 / spokes));
+                const gx = fwX + Math.cos(angle) * fwRadius;
+                const gy = fwY + Math.sin(angle) * fwRadius;
+
+                bgCtx.strokeStyle = '#fcd34d';
+                bgCtx.lineWidth = 2;
+                bgCtx.beginPath();
+                bgCtx.moveTo(fwX, fwY);
+                bgCtx.lineTo(gx, gy);
+                bgCtx.stroke();
+
+                bgCtx.fillStyle = (i % 2 === 0) ? '#06b6d4' : '#ec4899';
+                bgCtx.beginPath();
+                bgCtx.arc(gx, gy, 8, 0, Math.PI * 2);
+                bgCtx.fill();
+            }
+
+            // Roller Coaster Track
+            bgCtx.strokeStyle = '#38bdf8';
+            bgCtx.lineWidth = 4;
+            bgCtx.beginPath();
+            bgCtx.moveTo(w * 0.5, h * 0.7);
+            bgCtx.bezierCurveTo(w * 0.65, h * 0.4, w * 0.75, h * 0.9, w * 0.95, h * 0.6);
+            bgCtx.stroke();
+
+            // Moving Coaster Cart
+            coasterX += 3;
+            if (coasterX > w) coasterX = -50;
+            const coasterY = h * 0.65 + Math.sin(coasterX * 0.01) * 30;
+
+            bgCtx.fillStyle = '#facc15';
+            bgCtx.beginPath();
+            bgCtx.roundRect(coasterX, coasterY, 30, 16, 4);
+            bgCtx.fill();
+
+            requestAnimationFrame(drawCarnivalBackground);
+        }
+        drawCarnivalBackground();
+
+        /* ==========================================================================
+           3. DOME CAPSULE CANVAS SIMULATION
+           ========================================================================== */
+        const capCanvas = document.getElementById('capsuleCanvas');
+        const capCtx = capCanvas.getContext('2d');
+
+        function resizeCapCanvas() {
+            capCanvas.width = capCanvas.parentElement.clientWidth;
+            capCanvas.height = capCanvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCapCanvas);
+        setTimeout(resizeCapCanvas, 100);
+
+        const COLOR_MAP = {
+            'a': { top: '#ef4444', name: 'Merah' },
+            'e': { top: '#facc15', name: 'Kuning' },
+            'i': { top: '#3b82f6', name: 'Biru' },
+            'o': { top: '#22c55e', name: 'Hijau' },
+            'u': { top: '#a855f7', name: 'Ungu' },
+            'gold': { top: '#eab308', name: 'Emas' }
+        };
+
+        const PHONETICS = {
+            'a': '"a" seperti Ayam 🐓',
+            'e': '"e" seperti Epal 🍎',
+            'i': '"i" seperti Itik 🦆',
+            'o': '"o" seperti Otak 🧠',
+            'u': '"u" me-Ular 🐍'
+        };
+
+        let activeCapsules = [];
+
+        class Capsule2D {
+            constructor(vowel, isGold = false) {
+                this.vowel = vowel;
+                this.isGold = isGold;
+                this.radius = 18;
+                this.x = Math.random() * (capCanvas.width - 60) + 30;
+                this.y = Math.random() * (capCanvas.height - 100) + 40;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.color = isGold ? COLOR_MAP['gold'] : COLOR_MAP[vowel];
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                const padding = 25;
+                if (this.x < padding || this.x > capCanvas.width - padding) this.vx *= -1;
+                if (this.y < padding || this.y > capCanvas.height - padding) this.vy *= -1;
+            }
+
+            draw() {
+                capCtx.save();
+                capCtx.translate(this.x, this.y);
+
+                capCtx.fillStyle = this.color.top;
+                capCtx.beginPath();
+                capCtx.arc(0, 0, this.radius, Math.PI, 0);
+                capCtx.fill();
+
+                capCtx.fillStyle = '#ffffff';
+                capCtx.beginPath();
+                capCtx.arc(0, 0, this.radius, 0, Math.PI);
+                capCtx.fill();
+
+                capCtx.strokeStyle = '#334155';
+                capCtx.lineWidth = 2;
+                capCtx.beginPath();
+                capCtx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                capCtx.stroke();
+
+                capCtx.beginPath();
+                capCtx.moveTo(-this.radius, 0);
+                capCtx.lineTo(this.radius, 0);
+                capCtx.stroke();
+
+                capCtx.restore();
+            }
+        }
+
+        function initDomeCapsules(capsuleList) {
+            activeCapsules = capsuleList.map(item => new Capsule2D(item.vowel, item.isGold));
+        }
+
+        function renderDomeCapsules() {
+            if (capCanvas.width > 0) {
+                capCtx.clearRect(0, 0, capCanvas.width, capCanvas.height);
+                activeCapsules.forEach(cap => {
+                    cap.update();
+                    cap.draw();
+                });
+            }
+            requestAnimationFrame(renderDomeCapsules);
+        }
+        renderDomeCapsules();
+
+        function jiggleCapsules() {
+            activeCapsules.forEach(cap => {
+                cap.vx = (Math.random() - 0.5) * 12;
+                cap.vy = (Math.random() - 0.5) * 12;
+            });
+        }
+
+        /* ==========================================================================
+           4. GAME LOGIC & CENTER MODAL REVEAL
+           ========================================================================== */
+        let regularCapsules = [];
+        let phase = 1;
+        let openedCount = 0;
+        let currentCapsule = null;
+        let goldenCapsulesRemaining = 2;
+
+        const startOverlay = document.getElementById('startOverlay');
+        const btnStartGame = document.getElementById('btnStartGame');
+        const btnAudioToggle = document.getElementById('btnAudioToggle');
+        const audioIcon = document.getElementById('audioIcon');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const btnFullscreen = document.getElementById('btnFullscreen');
+        
+        const progressText = document.getElementById('progressText');
+        const gashaponMachine = document.getElementById('gashaponMachine');
+        const crankHandle = document.getElementById('crankHandle');
+        const crankArea = document.getElementById('crankArea');
+        const btnTurn = document.getElementById('btnTurn');
+
+        const centerCapsuleModal = document.getElementById('centerCapsuleModal');
+        const zoomedCapsuleVisual = document.getElementById('zoomedCapsuleVisual');
+        const capsuleTopHalf = document.getElementById('capsuleTopHalf');
+        const capsuleBottomHalf = document.getElementById('capsuleBottomHalf');
+        const btnOpenCapsuleModal = document.getElementById('btnOpenCapsuleModal');
+
+        const revealModal = document.getElementById('revealModal');
+        const vowelLetter = document.getElementById('vowelLetter');
+        const vowelPhonetic = document.getElementById('vowelPhonetic');
+        const capsuleSplitLeft = document.getElementById('capsuleSplitLeft');
+        const capsuleSplitRight = document.getElementById('capsuleSplitRight');
+        const btnNext = document.getElementById('btnNext');
+
+        const goldenPhaseOverlay = document.getElementById('goldenPhaseOverlay');
+        const goldCap1 = document.getElementById('goldCap1');
+        const goldCap2 = document.getElementById('goldCap2');
+
+        const victoryOverlay = document.getElementById('victoryOverlay');
+        const btnRestart = document.getElementById('btnRestart');
+
+        function resetGame() {
+            phase = 1;
+            openedCount = 0;
+            goldenCapsulesRemaining = 2;
+            currentCapsule = null;
+
+            regularCapsules = [
+                { id: 1, vowel: 'a' }, { id: 2, vowel: 'a' },
+                { id: 3, vowel: 'e' }, { id: 4, vowel: 'e' },
+                { id: 5, vowel: 'i' }, { id: 6, vowel: 'i' },
+                { id: 7, vowel: 'o' }, { id: 8, vowel: 'o' },
+                { id: 9, vowel: 'u' }, { id: 10, vowel: 'u' }
+            ];
+
+            regularCapsules.sort(() => Math.random() - 0.5);
+
+            progressText.innerText = "KAPSUL DIBUKA: 0 / 10";
+            btnTurn.classList.remove('hidden');
+
+            goldCap1.style.pointerEvents = 'auto';
+            goldCap1.style.opacity = '1';
+            goldCap2.style.pointerEvents = 'auto';
+            goldCap2.style.opacity = '1';
+
+            centerCapsuleModal.classList.add('hidden');
+            revealModal.classList.add('hidden');
+            goldenPhaseOverlay.classList.add('hidden');
+            victoryOverlay.classList.add('hidden');
+
+            initDomeCapsules(regularCapsules);
+        }
+
+        btnStartGame.addEventListener('click', () => {
+            audio.init();
+            audio.isMuted = false;
+            audioIcon.className = "fa-solid fa-volume-high";
+            audio.startBGM();
+            startOverlay.classList.add('hidden');
+            resetGame();
+        });
+
+        btnAudioToggle.addEventListener('click', () => {
+            audio.init();
+            audio.isMuted = !audio.isMuted;
+            if (audio.isMuted) {
+                audioIcon.className = "fa-solid fa-volume-xmark";
+            } else {
+                audioIcon.className = "fa-solid fa-volume-high";
+                audio.startBGM();
+            }
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            audio.volume = parseFloat(e.target.value);
+        });
+
+        btnFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        });
+
+        /* ACTION: TURN MACHINE & SWOOP CAPSULE TO CENTER OF SCREEN */
+        function triggerMachineTurn() {
+            if (regularCapsules.length === 0 || currentCapsule !== null) return;
+
+            audio.playCrankSound();
+            gashaponMachine.classList.add('shake-active');
+            crankHandle.classList.add('crank-active');
+            btnTurn.classList.add('pointer-events-none', 'opacity-50');
+
+            jiggleCapsules();
+
+            setTimeout(() => {
+                gashaponMachine.classList.remove('shake-active');
+                crankHandle.classList.remove('crank-active');
+
+                // Pop top item
+                currentCapsule = regularCapsules.pop();
+                activeCapsules.pop();
+
+                audio.playDropSound();
+
+                // SHOW ZOOMED-IN CENTER SCREEN MODAL
+                showCenterCapsuleModal(currentCapsule);
+
+                btnTurn.classList.remove('pointer-events-none', 'opacity-50');
+            }, 900);
+        }
+
+        btnTurn.addEventListener('click', triggerMachineTurn);
+        crankArea.addEventListener('click', triggerMachineTurn);
+
+        /* SHOW CENTER ZOOM MODAL */
+        function showCenterCapsuleModal(capObj) {
+            const color = COLOR_MAP[capObj.vowel];
+            
+            // Set capsule colors on center graphic
+            capsuleTopHalf.style.backgroundColor = color.top;
+            capsuleBottomHalf.style.backgroundColor = '#ffffff';
+
+            // Trigger animation restart
+            zoomedCapsuleVisual.classList.remove('capsule-center-zoom');
+            void zoomedCapsuleVisual.offsetWidth;
+            zoomedCapsuleVisual.classList.add('capsule-center-zoom');
+
+            centerCapsuleModal.classList.remove('hidden');
+        }
+
+        /* CLICK "BUKA KAPSUL!" ON CENTER MODAL */
+        btnOpenCapsuleModal.addEventListener('click', () => {
+            if (!currentCapsule) return;
+
+            audio.playOpenSound();
+            centerCapsuleModal.classList.add('hidden');
+            
+            setTimeout(() => {
+                showVowelModal(currentCapsule.vowel, false);
+            }, 250);
+        });
+
+        /* SHOW VOWEL REVEAL MODAL */
+        function showVowelModal(vowel, isGold = false) {
+            audio.playRevealSound();
+            
+            const color = isGold ? COLOR_MAP['gold'] : COLOR_MAP[vowel];
+
+            capsuleSplitLeft.style.backgroundColor = color.top;
+            capsuleSplitRight.style.backgroundColor = '#ffffff';
+
+            vowelLetter.innerText = vowel;
+            vowelLetter.style.color = color.top;
+            vowelPhonetic.innerText = PHONETICS[vowel] || 'Huruf Vokal Misteri';
+
+            revealModal.classList.remove('hidden');
+        }
+
+        /* TEACHER PACING CONTROL: SETERUSNYA */
+        btnNext.addEventListener('click', () => {
+            revealModal.classList.add('hidden');
+
+            if (phase === 1) {
+                openedCount++;
+                progressText.innerText = `KAPSUL DIBUKA: ${openedCount} / 10`;
+                currentCapsule = null;
+
+                if (openedCount >= 10) {
+                    phase = 2;
+                    audio.playGoldSound();
+                    goldenPhaseOverlay.classList.remove('hidden');
+                }
+            } else if (phase === 2) {
+                goldenCapsulesRemaining--;
+                if (goldenCapsulesRemaining > 0) {
+                    goldenPhaseOverlay.classList.remove('hidden');
+                } else {
+                    triggerVictory();
+                }
+            }
+        });
+
+        /* PHASE 2: GOLDEN CAPSULES */
+        function handleGoldenSelect(element) {
+            goldenPhaseOverlay.classList.add('hidden');
+            element.style.pointerEvents = 'none';
+            element.style.opacity = '0.3';
+
+            const vowels = ['a', 'e', 'i', 'o', 'u'];
+            const randomVowel = vowels[Math.floor(Math.random() * vowels.length)];
+
+            audio.playGoldSound();
+            setTimeout(() => {
+                showVowelModal(randomVowel, true);
+            }, 400);
+        }
+
+        goldCap1.addEventListener('click', () => handleGoldenSelect(goldCap1));
+        goldCap2.addEventListener('click', () => handleGoldenSelect(goldCap2));
+
+        /* GRAND VICTORY CONFETTI */
+        function triggerVictory() {
+            victoryOverlay.classList.remove('hidden');
+            audio.playVictoryFanfare();
+            startConfetti();
+        }
+
+        btnRestart.addEventListener('click', () => {
+            resetGame();
+        });
+
+        const vCanvas = document.getElementById('victoryCanvas');
+        const vCtx = vCanvas.getContext('2d');
+        let confettiParticles = [];
+
+        function startConfetti() {
+            vCanvas.width = window.innerWidth;
+            vCanvas.height = window.innerHeight;
+            confettiParticles = [];
+
+            for (let i = 0; i < 120; i++) {
+                confettiParticles.push({
+                    x: Math.random() * vCanvas.width,
+                    y: Math.random() * vCanvas.height - vCanvas.height,
+                    size: Math.random() * 10 + 6,
+                    color: ['#facc15', '#ef4444', '#3b82f6', '#22c55e', '#a855f7', '#ec4899'][Math.floor(Math.random() * 6)],
+                    vy: Math.random() * 4 + 2,
+                    vx: Math.random() * 2 - 1
+                });
+            }
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            if (victoryOverlay.classList.contains('hidden')) return;
+            vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
+
+            confettiParticles.forEach(p => {
+                p.y += p.vy;
+                p.x += p.vx;
+                if (p.y > vCanvas.height) p.y = -20;
+
+                vCtx.fillStyle = p.color;
+                vCtx.beginPath();
+                vCtx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+                vCtx.fill();
+            });
+
+            requestAnimationFrame(animateConfetti);
+        }
+    </script>
+</body>
+</html>
